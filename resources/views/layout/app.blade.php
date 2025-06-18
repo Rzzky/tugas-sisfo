@@ -3,13 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    @auth
-        @if (Auth::user()->role !== 'admin')
-            <script>
-                window.location.href = "{{ route('login') }}";
-            </script>
-        @endif
-    @endauth
     <title>@yield('title', 'Sisfo Sarpras') - Sistem Informasi Sarana Prasarana</title>
 
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
@@ -41,7 +34,6 @@
                 </div>
             </div>
 
-            {{-- BAGIAN NAVIGASI YANG HILANG --}}
             <nav class="mt-10 px-4 space-y-2">
                 <div class="sidebar-item">
                     <a class="flex items-center py-2.5 px-4 rounded-lg transition duration-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
@@ -99,8 +91,22 @@
                         <span class="ml-3">Laporan</span>
                     </a>
                 </div>
+
+                {{-- AREA KHUSUS ADMIN --}}
+                @if (auth()->user() && auth()->user()->role == 'admin')
+                <div class="pt-4 mt-4 border-t border-slate-700">
+                    <p class="px-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Admin Area</p>
+                    <div class="sidebar-item">
+                        {{-- INI BAGIAN YANG DIPERBAIKI --}}
+                        <a class="flex items-center py-2.5 px-4 rounded-lg transition duration-200 {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                            <i class="fas fa-users-cog w-6 text-center"></i>
+                            <span class="ml-3">Manajemen User</span>
+                        </a>
+                    </div>
+                </div>
+                @endif
+                
             </nav>
-            {{-- AKHIR BAGIAN NAVIGASI --}}
         </aside>
 
         <div class="flex-1 flex flex-col overflow-hidden">
@@ -112,9 +118,9 @@
 
                 <div x-data="{ dropdownOpen: false }" class="relative">
                     <button @click="dropdownOpen = !dropdownOpen" class="flex items-center gap-x-3 relative focus:outline-none">
-                        <div class="w-10 h-10 overflow-hidden rounded-full bg-indigo-600 flex items-center justify-center"><span class="text-white font-bold text-lg">{{ strtoupper(substr(auth()->user()->username ?? 'U', 0, 1)) }}</span></div>
+                        <div class="w-10 h-10 overflow-hidden rounded-full bg-indigo-600 flex items-center justify-center"><span class="text-white font-bold text-lg">{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</span></div>
                         <div class="text-left hidden md:block">
-                            <p class="text-sm font-semibold text-slate-200">{{ auth()->user()->username ?? 'User' }}</p>
+                            <p class="text-sm font-semibold text-slate-200">{{ auth()->user()->name ?? 'User' }}</p>
                             <p class="text-xs text-slate-400">{{ auth()->user()->role ?? 'Role' }}</p>
                         </div>
                         <i class="fas fa-chevron-down text-xs text-slate-400 hidden md:block"></i>

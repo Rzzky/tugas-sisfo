@@ -23,6 +23,12 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
+    
+    protected $routeMiddleware = [
+        // ... middleware lain yang sudah ada
+        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'admin' => \App\Http\Middleware\AdminMiddleware::class, // <-- TAMBAHKAN BARIS INI
+    ];
 
     /**
      * The application's route middleware groups.
