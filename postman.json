@@ -1,0 +1,222 @@
+{
+    "info": {
+      "_postman_id": "12345678-9abc-def0-1234-56789abcdef0",
+      "name": "Inventory API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Auth",
+        "item": [
+          {
+            "name": "Register",
+            "request": {
+              "method": "POST",
+              "header": [],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"username\": \"admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\",\n  \"role\": \"admin\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              },
+              "url": {
+                "raw": "http://localhost:8000/api/register",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["api", "register"]
+              }
+            }
+          },
+          {
+            "name": "Login",
+            "request": {
+              "method": "POST",
+              "header": [],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              },
+              "url": {
+                "raw": "http://localhost:8000/api/login",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["api", "login"]
+              }
+            }
+          },
+          {
+            "name": "Me (Current User)",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "http://localhost:8000/api/me",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["api", "me"]
+              }
+            }
+          },
+          {
+            "name": "Logout",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "http://localhost:8000/api/logout",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["api", "logout"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Barang",
+        "item": [
+          {
+            "name": "Get All Barang",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "http://localhost:8000/api/barang",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["api", "barang"]
+              }
+            }
+          },
+          {
+            "name": "Create Barang",
+            "request": {
+              "method": "POST",
+              "header": [],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"kode_barang\": \"BRG001\",\n  \"nama_barang\": \"Laptop\",\n  \"id_kategori\": 1,\n  \"jumlah\": 10,\n  \"tersedia\": 10,\n  \"dipinjam\": 0,\n  \"kondisi\": \"baru\",\n  \"lokasi\": \"Gudang A\",\n  \"status\": \"aktif\",\n  \"keterangan\": \"Unit baru\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              },
+              "url": {
+                "raw": "http://localhost:8000/api/barang",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["api", "barang"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Kategori",
+        "item": [
+          {
+            "name": "Get All Kategori",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "http://localhost:8000/api/kategori",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["api", "kategori"]
+              }
+            }
+          },
+          {
+            "name": "Create Kategori",
+            "request": {
+              "method": "POST",
+              "header": [],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"nama_kategori\": \"Elektronik\",\n  \"deksripsi\": \"Peralatan Elektronik\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              },
+              "url": {
+                "raw": "http://localhost:8000/api/kategori",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["api", "kategori"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Peminjaman",
+        "item": [
+          {
+            "name": "Get All Peminjaman",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "http://localhost:8000/api/peminjaman",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["api", "peminjaman"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Pengembalian",
+        "item": [
+          {
+            "name": "Get All Pengembalian",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "http://localhost:8000/api/pengembalian",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["api", "pengembalian"]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
