@@ -36,6 +36,18 @@ class PengembalianController extends Controller
         return view('pengembalian.index', compact('pengembalian'));
     }
 
+    public function show($id_pengembalian)
+    {
+        // Mengambil data pengembalian beserta relasi yang diperlukan
+        $pengembalian = \App\Models\Pengembalian::with([
+            'peminjaman.user', 
+            'peminjaman.barang'
+        ])->findOrFail($id_pengembalian);
+        
+        // Mengirim data ke view
+        return view('pengembalian.show', compact('pengembalian'));
+    }
+
     // Create new pengembalian (Request for approval)
     public function store(Request $request)
     {

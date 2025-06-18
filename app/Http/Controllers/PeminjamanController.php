@@ -53,53 +53,46 @@ class PeminjamanController extends Controller
     // Create new peminjaman
     public function store(Request $request)
     {
+        // Validasi input dari form, disesuaikan untuk web, bukan API
         $request->validate([
-            'id_user' => 'required|exists:users,id_user',
             'id_barang' => 'required|exists:barang,id_barang',
             'jumlah' => 'required|integer|min:1',
-            'tanggal_pinjam' => 'required|date',
-            'label_status' => 'sometimes|in:selesai,menunggu,penting'
+            'tanggal_kembali' => 'required|date|after_or_equal:today',
+            'keterangan' => 'nullable|string',
         ]);
 
-        return DB::transaction(function () use ($request) {
-            $barang = Barang::find($request->id_barang);
+        // Ambil data barang yang akan dipinjam
+        $barang = Barang::findOrFail($request->id_barang);
 
-            // Check barang availability
-            if ($barang->status !== 'tersedia' || $barang->jumlah < $request->jumlah) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Barang tidak tersedia atau stok tidak mencukupi'
-                ], 400);
-            }
+        // Cek ketersediaan stok
+        if ($barang->tersedia < $request->jumlah) {
+            return back()->with('error', 'Stok barang tidak mencukupi untuk peminjaman ini.');
+        }
 
-            $peminjaman = Peminjaman::create([
-                'id_user' => $request->id_user,
-                'id_barang' => $request->id_barang,
-                'jumlah' => $request->jumlah,
-                'tanggal_pinjam' => $request->tanggal_pinjam,
-                'status' => 'dipinjam',
-                'label_status' => $request->label_status ?? 'menunggu'
-            ]);
+        // Buat entri peminjaman baru
+        $peminjaman = new Peminjaman();
+        $peminjaman->id_user = auth()->id(); // Mengambil ID user yang sedang login
+        $peminjaman->id_barang = $request->id_barang;
+        $peminjaman->jumlah = $request->jumlah;
+        $peminjaman->tanggal_pinjam = now(); // Set tanggal pinjam ke hari ini
+        $peminjaman->tanggal_kembali = $request->tanggal_kembali;
+        $peminjaman->keterangan = $request->keterangan;
+        
+        // PERBAIKAN UTAMA: Set status awal menjadi 'menunggu'
+        $peminjaman->status = 'menunggu';
 
-            // Update barang stock
-            $barang->decrement('jumlah', $request->jumlah);
-            if ($barang->jumlah === 0) {
-                $barang->update(['status' => 'tidak tersedia']);
-            }
+        $peminjaman->save(); // Simpan peminjaman baru ke database
 
-            return response()->json([
-                'success' => true,
-                'data' => $peminjaman->load(['user', 'barang'])
-            ], 201);
-        });
+        // Redirect dengan pesan sukses
+        return redirect()->route('peminjaman.index')->with('success', 'Permintaan peminjaman berhasil diajukan dan sedang menunggu persetujuan admin.');
     }
 
-    // Get single peminjaman
-    public function show($id)
-{
-    $peminjaman = Peminjaman::with(['user', 'barang.kategori'])->findOrFail($id);
-    return view('peminjaman.show', compact('peminjaman'));
-}
+        // Get single peminjaman
+        public function show($id)
+    {
+        $peminjaman = Peminjaman::with(['user', 'barang.kategori'])->findOrFail($id);
+        return view('peminjaman.show', compact('peminjaman'));
+    }
 
     // Update peminjaman
     public function update(Request $request, $id)
@@ -327,7 +320,7 @@ public function requestList()
             'jumlah' => $request->jumlah,
             'tanggal_pinjam' => $request->tanggal_pinjam,
             'keterangan' => $request->keterangan,
-            'status' => 'dipinjam',
+            'status' => 'menunggu',
             'label_status' => 'menunggu'
         ]);
 

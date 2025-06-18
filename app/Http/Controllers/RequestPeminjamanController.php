@@ -5,48 +5,50 @@ namespace App\Http\Controllers;
 use App\Models\Peminjaman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Pengembalian;
 
 class RequestPeminjamanController extends Controller
 {
+    /**
+     * Menampilkan daftar permintaan peminjaman yang masih menunggu.
+     */
     public function index()
     {
-        // Mengambil permintaan peminjaman dan pengembalian yang menunggu persetujuan
         $requests = Peminjaman::with(['user', 'barang'])
-            ->where('label_status', 'menunggu')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        $pengembalianRequests = Pengembalian::with('peminjaman.user', 'peminjaman.barang')
-            ->where('label_status', 'menunggu')
+            ->where('status', 'menunggu') // Filter berdasarkan status peminjaman
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return view('request.request_peminjaman', compact('requests'));
     }
 
-    public function approve($id)
+    /**
+     * Menyetujui permintaan peminjaman.
+     */
+    public function approve(Peminjaman $peminjaman)
     {
+        // Gunakan transaction untuk memastikan semua query berhasil atau tidak sama sekali
         DB::beginTransaction();
         try {
-            $peminjaman = Peminjaman::with('barang')->findOrFail($id);
+            $barang = $peminjaman->barang;
 
-            // Validasi stok
-            if ($peminjaman->barang->tersedia < $peminjaman->jumlah) {
-                return back()->with('error', 'Stok barang tidak mencukupi');
+            // Validasi stok sekali lagi sebelum proses
+            if ($barang->tersedia < $peminjaman->jumlah) {
+                DB::rollBack();
+                return back()->with('error', 'Stok barang tidak mencukupi untuk disetujui.');
             }
 
-            $peminjaman->update([
-                'status' => 'dipinjam',
-                'label_status' => 'selesai'
-            ]);
+            // PERBAIKAN: Update status peminjaman menjadi 'dipinjam'
+            $peminjaman->status = 'dipinjam';
+            $peminjaman->save();
 
-            // Update stok barang
-            $peminjaman->barang->decrement('tersedia', $peminjaman->jumlah);
+            // Update stok barang: kurangi yang tersedia, tambah yang dipinjam
+            $barang->tersedia -= $peminjaman->jumlah;
+            $barang->dipinjam += $peminjaman->jumlah;
+            $barang->save();
 
             DB::commit();
 
-            return back()->with('success', 'Peminjaman disetujui dan stok berkurang');
+            return back()->with('success', 'Peminjaman disetujui dan stok barang telah diperbarui.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -54,14 +56,14 @@ class RequestPeminjamanController extends Controller
         }
     }
 
-    public function reject($id)
+    /**
+     * Menolak permintaan peminjaman.
+     */
+    public function reject(Peminjaman $peminjaman)
     {
-        $peminjaman = Peminjaman::findOrFail($id);
-        $peminjaman->update([
-            'status' => 'ditolak',
-            'label_status' => 'ditolak'
-        ]);
+        // Cukup ubah statusnya menjadi ditolak
+        $peminjaman->update(['status' => 'ditolak']);
 
-        return back()->with('success', 'Peminjaman ditolak');
+        return back()->with('success', 'Peminjaman telah ditolak.');
     }
 }

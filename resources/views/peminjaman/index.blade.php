@@ -3,117 +3,81 @@
 @section('title', 'Daftar Peminjaman')
 
 @section('content')
-
-<div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-semibold text-gray-800">Daftar Peminjaman</h2>
-        </div>
-
-    <div class="p-4">
-        <form action="{{ route('peminjaman.index') }}" method="GET" class="mb-4">
-            <div class="flex items-center space-x-4">
-                <div class="w-1/3">
-                    <label for="periode" class="block text-sm font-medium text-gray-700 mb-1">Filter Periode</label>
-                    <select name="periode" id="periode" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        <option value="all" {{ request('periode') == 'all' ? 'selected' : '' }}>Semua</option>
-                        <option value="minggu" {{ request('periode') == 'minggu' ? 'selected' : '' }}>Minggu Ini</option>
-                        <option value="bulan" {{ request('periode') == 'bulan' ? 'selected' : '' }}>Bulan Ini</option>
-                        <option value="tahun" {{ request('periode') == 'tahun' ? 'selected' : '' }}>Tahun Ini</option>
-                    </select>
-                </div>
-                <div class="pt-6">
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition duration-300">
-                        <i class="fas fa-filter mr-2"></i>Filter
-                    </button>
-                </div>
-            </div>
+<div class="bg-slate-800 rounded-xl shadow-lg p-6 border border-slate-700">
+    {{-- Header dan Filter --}}
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h2 class="text-2xl font-semibold text-slate-200">Riwayat Peminjaman</h2>
+        <form action="{{ route('peminjaman.index') }}" method="GET" class="flex items-center gap-x-2">
+            <label for="periode" class="text-sm font-medium text-slate-400">Periode:</label>
+            <select name="periode" id="periode" onchange="this.form.submit()" class="bg-slate-900 border border-slate-600 text-slate-200 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 py-2 px-3">
+                <option value="all" {{ request('periode') == 'all' ? 'selected' : '' }}>Semua</option>
+                <option value="minggu" {{ request('periode') == 'minggu' ? 'selected' : '' }}>Minggu Ini</option>
+                <option value="bulan" {{ request('periode') == 'bulan' ? 'selected' : '' }}>Bulan Ini</option>
+                <option value="tahun" {{ request('periode') == 'tahun' ? 'selected' : '' }}>Tahun Ini</option>
+            </select>
         </form>
+    </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white rounded-lg overflow-hidden">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="py-3 px-4 text-left">No</th>
-                        <th class="py-3 px-4 text-left">Peminjam</th>
-                        <th class="py-3 px-4 text-left">Barang</th>
-                        <th class="py-3 px-4 text-left">Jumlah</th>
-                        <th class="py-3 px-4 text-left">Tanggal Pinjam</th>
-                        <th class="py-3 px-4 text-left">Status</th>
-                        <th class="py-3 px-4 text-left">Label</th>
-                        <th class="py-3 px-4 text-left">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-600">
-                    @forelse($peminjaman as $index => $item)
-                    <tr class="{{ $index % 2 == 0 ? 'bg-gray-50' : 'bg-white' }}">
-                        <td class="py-3 px-4">{{ $index + 1 }}</td>
-                        <td class="py-3 px-4">{{ $item->user->name ?? $item->user->username ?? 'N/A' }}</td>
-                        <td class="py-3 px-4">{{ $item->barang->nama_barang ?? 'N/A' }}</td>
-                        <td class="py-3 px-4">{{ $item->jumlah }}</td>
-                        <td class="py-3 px-4">{{ \Carbon\Carbon::parse($item->tanggal_pinjam)->format('d/m/Y') }}</td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 rounded text-xs font-medium
-                                {{ $item->status == 'dipinjam' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                {{ $item->status == 'dikembalikan' ? 'bg-green-100 text-green-800' : '' }}
-                                {{ $item->status == 'menunggu' ? 'bg-blue-100 text-blue-800' : '' }}
-                                {{ $item->status == 'ditolak' ? 'bg-red-100 text-red-800' : '' }}">
-                                {{ ucfirst($item->status) }}
+    {{-- Tabel Daftar Peminjaman --}}
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-700 text-slate-300 uppercase">
+                <tr>
+                    <th class="py-3 px-4 text-left">No</th>
+                    <th class="py-3 px-4 text-left">Peminjam</th>
+                    <th class="py-3 px-4 text-left">Barang</th>
+                    <th class="py-3 px-4 text-center">Jumlah</th>
+                    <th class="py-3 px-4 text-left">Tgl Pinjam</th>
+                    <th class="py-3 px-4 text-center">Status</th>
+                    <th class="py-3 px-4 text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="text-slate-400">
+                @php
+                    $statusColors = [
+                        'dipinjam' => 'bg-yellow-900 text-yellow-300',
+                        'dikembalikan' => 'bg-green-900 text-green-300',
+                        'menunggu' => 'bg-blue-900 text-blue-300',
+                        'ditolak' => 'bg-red-900 text-red-300',
+                        'menunggu_pengembalian' => 'bg-cyan-900 text-cyan-300',
+                    ];
+                @endphp
+                @forelse($peminjaman as $index => $item)
+                    <tr class="border-b border-slate-700 hover:bg-slate-700/50">
+                        <td class="px-4 py-3">{{ $loop->iteration }}</td>
+                        <td class="px-4 py-3 font-semibold text-slate-200">{{ $item->user->name ?? $item->user->username ?? 'N/A' }}</td>
+                        <td class="px-4 py-3">{{ $item->barang->nama_barang ?? 'N/A' }}</td>
+                        <td class="px-4 py-3 text-center">{{ $item->jumlah }}</td>
+                        <td class="px-4 py-3">{{ \Carbon\Carbon::parse($item->tanggal_pinjam)->isoFormat('DD MMM YY') }}</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium {{ $statusColors[$item->status] ?? 'bg-slate-700 text-slate-300' }}">
+                                {{ str_replace('_', ' ', Str::title($item->status)) }}
                             </span>
                         </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 rounded text-xs font-medium
-                                {{ $item->label_status == 'selesai' ? 'bg-green-100 text-green-800' : '' }}
-                                {{ $item->label_status == 'menunggu' ? 'bg-blue-100 text-blue-800' : '' }}
-                                {{ $item->label_status == 'penting' ? 'bg-red-100 text-red-800' : '' }}
-                                 {{ $item->label_status == 'ditolak' ? 'bg-red-100 text-red-800' : '' }}">
-                                {{ ucfirst($item->label_status) }}
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex space-x-2">
-                                <a href="{{ route('peminjaman.show', $item->id_peminjaman) }}" class="text-blue-500 hover:text-blue-700">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-center space-x-3">
+                                <a href="{{ route('peminjaman.show', $item->id_peminjaman) }}" class="text-blue-400 hover:text-blue-300" title="Detail">
                                     <i class="fas fa-eye"></i>
                                 </a>
-
-                                @if($item->status == 'dipinjam')
-                                <form action="{{ route('peminjaman.kembalikan', $item->id_peminjaman) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mengembalikan barang ini?')">
-                                    @csrf
-                                    @method('PUT')
-                                    <button type="submit" class="text-green-500 hover:text-green-700">
-                                        <i class="fas fa-undo-alt"></i>
-                                    </button>
-                                </form>
-                                @endif
-
-                                <form action="{{ route('peminjaman.destroy', $item->id_peminjaman) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+                                <form action="{{ route('peminjaman.destroy', $item->id_peminjaman) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menghapus data peminjaman ini?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-500 hover:text-red-700">
+                                    <button type="submit" class="text-red-500 hover:text-red-400" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             </div>
                         </td>
                     </tr>
-                    @empty
+                @empty
                     <tr>
-                        <td colspan="8" class="py-3 px-4 text-center text-gray-500">Tidak ada data peminjaman</td>
+                        <td colspan="7" class="text-center py-10 text-slate-500">
+                            Tidak ada data peminjaman pada periode ini.
+                        </td>
                     </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Automatically submit the form when the periode select changes
-        document.getElementById('periode').addEventListener('change', function() {
-            this.form.submit();
-        });
-    });
-</script>
-@endpush
