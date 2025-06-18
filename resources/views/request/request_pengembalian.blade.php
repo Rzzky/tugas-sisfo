@@ -15,7 +15,7 @@
                     <th class="py-3 px-4 text-left">No</th>
                     <th class="py-3 px-4 text-left">Peminjam</th>
                     <th class="py-3 px-4 text-left">Barang</th>
-                    <th class="py-3 px-4 text-left">Tgl Pengembalian</th>
+                    <th class="py-3 px-4 text-left">Tgl Pengajuan Kembali</th>
                     <th class="py-3 px-4 text-center">Status</th>
                     <th class="py-3 px-4 text-center">Aksi</th>
                 </tr>
@@ -28,8 +28,8 @@
                         <td class="px-4 py-3">{{ $request->peminjaman->barang->nama_barang ?? 'N/A' }}</td>
                         <td class="px-4 py-3">{{ \Carbon\Carbon::parse($request->tanggal_kembali)->isoFormat('DD MMM YYYY') }}</td>
                         <td class="px-4 py-3 text-center">
-                             <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-900 text-blue-300">
-                                {{ $request->label_status == 'menunggu' ? 'Menunggu Persetujuan' : Str::title($request->label_status) }}
+                             <span class="px-2 py-1 rounded-full text-xs font-medium bg-cyan-900 text-cyan-300">
+                                Menunggu Persetujuan
                             </span>
                         </td>
                         <td class="px-4 py-3">
@@ -48,6 +48,10 @@
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </form>
+                                {{-- PERBAIKAN: Menambahkan tombol detail --}}
+                                <a href="{{ route('peminjaman.show', $request->id_peminjaman) }}" class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 text-xs" title="Lihat Detail Peminjaman">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>

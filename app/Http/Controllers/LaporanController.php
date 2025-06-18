@@ -8,121 +8,120 @@ use App\Models\Peminjaman;
 use App\Models\Pengembalian;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PeminjamanBulananExport;
+use App\Exports\PengembalianBulananExport;
+use App\Exports\BarangTerpopulerExport;
+use App\Exports\KondisiBarangExport;
 
 class LaporanController extends Controller
 {
     public function index()
     {
-        // Data untuk laporan barang terpopuler
+        $tahunIni = date('Y');
+        $totalBarang = Barang::count();
+        $barangTersedia = Barang::sum('tersedia');
+        $barangDipinjam = Barang::sum('dipinjam');
+        $totalPeminjaman = Peminjaman::whereYear('tanggal_pinjam', $tahunIni)->count();
+        $totalPengembalian = Pengembalian::whereYear('tanggal_kembali', $tahunIni)->count();
+
+        // Data Grafik
         $barangTerpopuler = Peminjaman::select('id_barang', DB::raw('COUNT(*) as jumlah_peminjaman'))
             ->with('barang')
+            ->whereYear('tanggal_pinjam', $tahunIni)
             ->groupBy('id_barang')
             ->orderBy('jumlah_peminjaman', 'desc')
-            ->limit(10)
+            ->limit(5)
             ->get();
 
-        // Data untuk tingkat peminjaman per bulan dalam tahun ini
-        $tahunIni = Carbon::now()->year;
-        $dataPeminjaman = $this->getDataBulanan(Peminjaman::class, 'tanggal_pinjam', $tahunIni);
-
-        // Data untuk tingkat pengembalian per bulan dalam tahun ini
-        $dataPengembalian = $this->getDataBulanan(Pengembalian::class, 'tanggal_kembali', $tahunIni);
-
-        // Data untuk kondisi keseluruhan barang
         $kondisiBarang = Barang::select('kondisi', DB::raw('COUNT(*) as jumlah'))
             ->groupBy('kondisi')
             ->get();
 
-        // Data statistik keseluruhan
-        $totalBarang = Barang::count();
-        $totalPeminjaman = Peminjaman::whereYear('tanggal_pinjam', $tahunIni)->count();
-        $totalPengembalian = Pengembalian::whereYear('tanggal_kembali', $tahunIni)->count();
-        $barangDipinjam = Barang::sum('dipinjam');
-        $barangTersedia = Barang::sum('tersedia');
+        $dataPeminjaman = Peminjaman::select(
+                DB::raw("DATE_FORMAT(tanggal_pinjam, '%b') as bulan"),
+                DB::raw('COUNT(*) as jumlah')
+            )
+            ->whereYear('tanggal_pinjam', $tahunIni)
+            ->groupBy('bulan')
+            ->orderByRaw("MONTH(tanggal_pinjam)")
+            ->get();
+
+        $dataPengembalian = Pengembalian::select(
+                DB::raw("DATE_FORMAT(tanggal_kembali, '%b') as bulan"),
+                DB::raw('COUNT(*) as jumlah')
+            )
+            ->whereYear('tanggal_kembali', $tahunIni)
+            ->groupBy('bulan')
+            ->orderByRaw("MONTH(tanggal_kembali)")
+            ->get();
 
         return view('laporan.index', compact(
-            'barangTerpopuler',
-            'dataPeminjaman',
-            'dataPengembalian',
-            'kondisiBarang',
-            'totalBarang',
-            'totalPeminjaman',
-            'totalPengembalian',
-            'barangDipinjam',
-            'barangTersedia',
-            'tahunIni'
+            'totalBarang', 'barangTersedia', 'barangDipinjam', 'totalPeminjaman', 'totalPengembalian',
+            'tahunIni', 'barangTerpopuler', 'kondisiBarang', 'dataPeminjaman', 'dataPengembalian'
         ));
-    }
-
-    private function getDataBulanan($model, $tanggalField, $tahun)
-    {
-        $data = [];
-        $namaBulan = [
-            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ];
-
-        // Inisialisasi data bulan dengan nilai 0
-        foreach ($namaBulan as $index => $bulan) {
-            $data[$index + 1] = [
-                'bulan' => $bulan,
-                'jumlah' => 0
-            ];
-        }
-
-        // Ambil data dari database
-        $results = $model::select(
-            DB::raw('MONTH(' . $tanggalField . ') as bulan'),
-            DB::raw('COUNT(*) as jumlah')
-        )
-        ->whereYear($tanggalField, $tahun)
-        ->groupBy('bulan')
-        ->get();
-
-        // Update data bulan dengan nilai dari database
-        foreach ($results as $result) {
-            $data[$result->bulan]['jumlah'] = $result->jumlah;
-        }
-
-        return array_values($data);
     }
 
     public function cetak(Request $request)
     {
-        $jenisLaporan = $request->jenis_laporan;
-        $bulan = $request->bulan ?? Carbon::now()->month;
-        $tahun = $request->tahun ?? Carbon::now()->year;
+        $request->validate([
+            'jenis_laporan' => 'required|string',
+            'format' => 'required|in:pdf,excel',
+            'bulan' => 'nullable|integer|between:1,12',
+            'tahun' => 'nullable|integer',
+        ]);
 
-        switch ($jenisLaporan) {
-            case 'barang_terpopuler':
-                $data = Peminjaman::select('id_barang', DB::raw('COUNT(*) as jumlah_peminjaman'))
-                    ->with('barang')
-                    ->groupBy('id_barang')
-                    ->orderBy('jumlah_peminjaman', 'desc')
-                    ->limit(10)
-                    ->get();
-                return view('laporan.cetak.barang_terpopuler', compact('data', 'bulan', 'tahun'));
+        $jenis = $request->jenis_laporan;
+        $format = $request->format;
+        $bulan = $request->bulan ?? date('m');
+        $tahun = $request->tahun ?? date('Y');
+        $namaFile = $jenis . '_' . $bulan . '_' . $tahun . '.xlsx';
 
+        // Logika untuk Excel
+        if ($format == 'excel') {
+            switch ($jenis) {
+                case 'peminjaman_bulanan':
+                    return Excel::download(new PeminjamanBulananExport($bulan, $tahun), $namaFile);
+                case 'pengembalian_bulanan':
+                    return Excel::download(new PengembalianBulananExport($bulan, $tahun), $namaFile);
+                case 'barang_terpopuler':
+                    return Excel::download(new BarangTerpopulerExport($tahun), 'barang_terpopuler_'.$tahun.'.xlsx');
+                case 'kondisi_barang':
+                    return Excel::download(new KondisiBarangExport(), 'laporan_kondisi_barang.xlsx');
+                default:
+                    return back()->with('error', 'Jenis laporan tidak valid.');
+            }
+        }
+        
+        // Logika untuk PDF (yang sudah ada)
+        $viewName = 'laporan.cetak.' . $jenis;
+        $data = [];
+
+        switch ($jenis) {
             case 'peminjaman_bulanan':
-                $data = Peminjaman::whereMonth('tanggal_pinjam', $bulan)
-                    ->whereYear('tanggal_pinjam', $tahun)
-                    ->with(['barang', 'user'])
-                    ->get();
-                return view('laporan.cetak.peminjaman_bulanan', compact('data', 'bulan', 'tahun'));
-
+                $data = Peminjaman::with(['user', 'barang'])->whereYear('tanggal_pinjam', $tahun)->whereMonth('tanggal_pinjam', $bulan)->get();
+                break;
             case 'pengembalian_bulanan':
-                $data = Pengembalian::whereMonth('tanggal_kembali', $bulan)
-                    ->whereYear('tanggal_kembali', $tahun)
-                    ->with(['peminjaman.barang', 'peminjaman.user'])
-                    ->get();
-                return view('laporan.cetak.pengembalian_bulanan', compact('data', 'bulan', 'tahun'));
-
+                $data = Pengembalian::with(['peminjaman.user', 'peminjaman.barang'])->whereYear('tanggal_kembali', $tahun)->whereMonth('tanggal_kembali', $bulan)->get();
+                break;
+            case 'barang_terpopuler':
+                 $data = Peminjaman::select('id_barang', DB::raw('COUNT(*) as jumlah_peminjaman'))
+                    ->with('barang.kategori')
+                    ->whereYear('tanggal_pinjam', $tahun)
+                    ->groupBy('id_barang')
+                    ->orderBy('jumlah_peminjaman', 'desc')->get();
+                break;
             case 'kondisi_barang':
                 $data = Barang::with('kategori')->get();
-                return view('laporan.cetak.kondisi_barang', compact('data'));
-
+                break;
             default:
-                return redirect()->route('laporan.index')->with('error', 'Jenis laporan tidak valid');
+                return back()->with('error', 'Jenis laporan tidak valid.');
         }
+
+        if (!view()->exists($viewName)) {
+            return back()->with('error', 'Template cetak tidak ditemukan.');
+        }
+        
+        return view($viewName, compact('data', 'bulan', 'tahun'));
     }
 }
