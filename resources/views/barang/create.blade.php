@@ -22,15 +22,14 @@
         </div>
     @endif
 
-    <form action="{{ route('barang.store') }}" method="POST" class="space-y-6">
+    <form action="{{ route('barang.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
 
         <input type="hidden" name="dipinjam" value="0">
         <input type="hidden" name="tersedia" id="hidden_tersedia" value="{{ old('jumlah', 1) }}">
         <input type="hidden" name="status" id="hidden_status" value="tersedia">
 
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6">
             <div class="space-y-6">
                 <div>
                     <label for="kode_barang" class="block text-sm font-medium text-slate-300">Kode Barang <span class="text-red-500">*</span></label>
@@ -81,6 +80,23 @@
             <textarea name="keterangan" id="keterangan" rows="4" placeholder="Spesifikasi, catatan, atau informasi tambahan lainnya" class="mt-1 block w-full bg-slate-900 border-slate-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-slate-200">{{ old('keterangan') }}</textarea>
         </div>
 
+        <div class="space-y-2">
+            <label for="foto" class="block text-sm font-medium text-slate-300">Foto Barang (Opsional)</label>
+            <div class="mt-1 flex justify-center items-center px-6 pt-5 pb-6 border-2 border-slate-600 border-dashed rounded-md">
+                <div class="space-y-1 text-center">
+                    <img id="foto_preview" src="" alt="Preview Foto" class="w-32 h-32 object-cover mx-auto rounded-md mb-2 hidden">
+                    <i id="foto_icon" class="fas fa-image fa-3x text-slate-500"></i>
+                    <div class="flex text-sm text-slate-500">
+                        <label for="foto" class="relative cursor-pointer bg-slate-700 rounded-md font-medium text-indigo-400 hover:text-indigo-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-slate-800 focus-within:ring-indigo-500 px-2 py-1">
+                            <span>Upload sebuah file</span>
+                            <input id="foto" name="foto" type="file" class="sr-only" accept="image/*">
+                        </label>
+                        <p class="pl-1">atau seret dan lepas</p>
+                    </div>
+                    <p class="text-xs text-slate-600">PNG, JPG, GIF up to 2MB</p>
+                </div>
+            </div>
+        </div>
 
         <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-slate-700">
             <a href="{{ route('barang.index') }}" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2 px-4 rounded-lg transition duration-300">
@@ -100,6 +116,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const jumlahInput = document.getElementById('jumlah');
     const hiddenTersediaInput = document.getElementById('hidden_tersedia');
     const hiddenStatusInput = document.getElementById('hidden_status');
+    const fotoInput = document.getElementById('foto');
+    const fotoPreview = document.getElementById('foto_preview');
+    const fotoIcon = document.getElementById('foto_icon');
+
+    fotoInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                fotoPreview.src = e.target.result;
+                fotoPreview.classList.remove('hidden');
+                fotoIcon.classList.add('hidden');
+            }
+            reader.readAsDataURL(file);
+        }
+    });
 
     function updateStok() {
         const jumlah = parseInt(jumlahInput.value) || 0;

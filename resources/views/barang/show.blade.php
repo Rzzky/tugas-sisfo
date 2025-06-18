@@ -53,6 +53,10 @@
                 <div class="text-slate-200 col-span-2 font-light italic bg-slate-900 p-3 rounded-md">
                     {{ $barang->keterangan ?: 'Tidak ada keterangan.' }}
                 </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-200 mb-2">Foto Barang</h3>
+                    <img src="{{ $barang->foto ? asset('storage/barang/' . $barang->foto) : 'https://placehold.co/600x400/1e293b/94a3b8?text=Tidak+Ada+Foto' }}" alt="Foto {{ $barang->nama_barang }}" class="w-full h-auto object-cover rounded-lg shadow-lg">
+                </div>
             </div>
         </div>
 

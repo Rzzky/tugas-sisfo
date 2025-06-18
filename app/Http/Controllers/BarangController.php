@@ -38,11 +38,25 @@ class BarangController extends Controller
             'lokasi' => 'required',
             'status' => 'required|in:tersedia,tidak tersedia',
             'keterangan' => 'nullable',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = $request->all();
 
-        Barang::create($data);
+        if ($request->hasFile('foto')) {
+            $path = $request->file('foto')->store('public/barang');
+            $data['foto'] = basename($path);
+        }
+
+        $barang = new Barang();
+        $barang->fill($request->except('foto')); // Isi semua data kecuali foto
+
+        if ($request->hasFile('foto')) {
+            $path = $request->file('foto')->store('public/barang');
+            $barang->foto = basename($path); // Secara eksplisit set nama file foto
+        }
+
+        $barang->save(); 
 
         return redirect()->route('barang.index')->with('success', 'Barang berhasil ditambahkan');
     }
@@ -78,9 +92,20 @@ class BarangController extends Controller
             'lokasi' => 'required',
             'status' => 'required|in:tersedia,tidak tersedia',
             'keterangan' => 'nullable',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = $request->all();
+        $barang = Barang::findOrFail($id_barang);
+
+        if ($request->hasFile('foto')) {
+            if ($barang->foto) {
+                Storage::delete('public/barang/' . $barang->foto);
+            }
+            
+            $path = $request->file('foto')->store('public/barang');
+            $data['foto'] = basename($path);
+        }
 
         $barang->update($data);
 
@@ -91,6 +116,9 @@ class BarangController extends Controller
     public function destroy($id_barang)
     {
         $barang = Barang::findOrFail($id_barang);
+        if ($barang->foto) {
+            Storage::delete('public/barang/' . $barang->foto);
+        }
         $barang->delete();
 
         return redirect()->route('barang.index')->with('success', 'Barang berhasil dihapus');

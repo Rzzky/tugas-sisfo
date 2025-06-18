@@ -23,11 +23,10 @@
         </div>
     @endif
 
-    <form action="{{ route('barang.update', $barang->id_barang) }}" method="POST" class="space-y-6">
+    <form action="{{ route('barang.update', $barang->id_barang) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PUT')
 
-        {{-- PERBAIKAN: Input tersembunyi untuk memenuhi validasi controller --}}
         <input type="hidden" name="dipinjam" value="{{ $barang->dipinjam }}">
         <input type="hidden" name="tersedia" id="hidden_tersedia" value="{{ old('tersedia', $barang->tersedia) }}">
         <input type="hidden" name="status" id="hidden_status" value="{{ old('status', $barang->status) }}">
@@ -54,6 +53,21 @@
                         @endforeach
                     </select>
                 </div>
+            </div>
+
+            <div class="space-y-2">
+                <label for="foto" class="block text-sm font-medium text-slate-300">Ganti Foto Barang (Opsional)</label>
+                <div class="mt-1">
+                    {{-- Tampilkan foto saat ini --}}
+                    <img id="foto_preview" src="{{ $barang->foto ? asset('storage/barang/' . $barang->foto) : 'https://placehold.co/600x400/1e293b/94a3b8?text=Tidak+Ada+Foto' }}" alt="Foto Barang" class="w-full h-40 object-cover rounded-md mb-2">
+                </div>
+                <div class="flex text-sm text-slate-500">
+                    <label for="foto" class="relative cursor-pointer bg-slate-700 rounded-md font-medium text-indigo-400 hover:text-indigo-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-slate-800 focus-within:ring-indigo-500 px-2 py-1">
+                        <span>Pilih file baru...</span>
+                        <input id="foto" name="foto" type="file" class="sr-only" accept="image/*">
+                    </label>
+                </div>
+                 <p class="text-xs text-slate-600 mt-1">Biarkan kosong jika tidak ingin mengganti foto.</p>
             </div>
             
             {{-- Kolom Kanan: Informasi Fisik --}}
@@ -122,7 +136,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const hiddenStatusInput = document.getElementById('hidden_status');
     const displayTersedia = document.getElementById('display_tersedia');
     const dipinjam = parseInt("{{ $barang->dipinjam }}") || 0;
+    const fotoInput = document.getElementById('foto');
+    const fotoPreview = document.getElementById('foto_preview');
 
+    fotoInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            fotoPreview.src = URL.createObjectURL(file);
+        }
+    });
+    
     function updateStok() {
         const jumlah = parseInt(jumlahInput.value) || 0;
         const stokTersedia = jumlah - dipinjam;
