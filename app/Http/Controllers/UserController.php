@@ -90,7 +90,7 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        if ($user->getKey() === auth()->user()->getKey()) { // PENYEMPURNAAN
+        if ($user->id_user === auth()->user()->id_user) {
             return redirect()->route('users.index')->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
 
