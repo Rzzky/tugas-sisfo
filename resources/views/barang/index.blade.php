@@ -56,10 +56,10 @@
                         <td class="px-4 py-3 text-center">{{ $item->jumlah }}</td>
                         <td class="px-4 py-3 text-center font-bold text-green-400">{{ $item->tersedia }}</td>
                         <td class="px-4 py-3 text-center">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full {{ ['Baik' => 'bg-green-900 text-green-300', 'Rusak Ringan' => 'bg-yellow-900 text-yellow-300', 'Rusak Berat' => 'bg-red-900 text-red-300'][$item->kondisi] ?? '' }}">{{ $item->kondisi }}</span>
+                            <span class="whitespace-nowrap px-2 py-1 text-xs font-medium rounded-full {{ ['Baik' => 'bg-green-900 text-green-300', 'Rusak Ringan' => 'bg-yellow-900 text-yellow-300', 'Rusak Berat' => 'bg-red-900 text-red-300'][$item->kondisi] ?? '' }}">{{ $item->kondisi }}</span>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full {{ ['tersedia' => 'bg-green-900 text-green-300', 'tidak tersedia' => 'bg-slate-600 text-slate-300'][$item->status] ?? '' }}">{{ Str::title($item->status) }}</span>
+                            <span class="whitespace-nowrap px-2 py-1 text-xs font-medium rounded-full {{ ['tersedia' => 'bg-green-900 text-green-300', 'tidak tersedia' => 'bg-slate-600 text-slate-300'][$item->status] ?? '' }}">{{ Str::title($item->status) }}</span>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center space-x-3">

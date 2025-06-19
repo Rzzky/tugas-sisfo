@@ -23,6 +23,7 @@ class Barang extends Model
         'lokasi',
         'status',
         'keterangan',
+        'foto',
     ];
 
     protected $casts = [

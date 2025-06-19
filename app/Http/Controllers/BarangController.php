@@ -6,6 +6,7 @@ use App\Models\Barang;
 use App\Models\Kategori;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class BarangController extends Controller
 {
@@ -48,17 +49,9 @@ class BarangController extends Controller
             $data['foto'] = basename($path);
         }
 
-        $barang = new Barang();
-        $barang->fill($request->except('foto')); // Isi semua data kecuali foto
+        Barang::create($data);
 
-        if ($request->hasFile('foto')) {
-            $path = $request->file('foto')->store('public/barang');
-            $barang->foto = basename($path); // Secara eksplisit set nama file foto
-        }
-
-        $barang->save(); 
-
-        return redirect()->route('barang.index')->with('success', 'Barang berhasil ditambahkan');
+        return redirect()->route('barang.index')->with('success', 'Barang berhasil ditambahkan.');
     }
 
     // Menampilkan detail barang
@@ -82,10 +75,14 @@ class BarangController extends Controller
         $barang = Barang::findOrFail($id_barang);
 
         $request->validate([
-            'kode_barang' => 'required|unique:barang,kode_barang,'.$id_barang.',id_barang|max:255',
+            'kode_barang' => [
+                'required',
+                'max:255',
+                Rule::unique('barang')->ignore($barang->id_barang, 'id_barang')
+            ],
             'nama_barang' => 'required|max:255',
             'id_kategori' => 'required|exists:kategori,id_kategori',
-            'jumlah' => 'required|integer|min:0',
+            'jumlah' => ['required', 'integer', 'min:'.$barang->dipinjam],
             'tersedia' => 'required|integer|min:0',
             'dipinjam' => 'required|integer|min:0',
             'kondisi' => 'required|in:Baik,Rusak Ringan,Rusak Berat',
@@ -96,7 +93,6 @@ class BarangController extends Controller
         ]);
 
         $data = $request->all();
-        $barang = Barang::findOrFail($id_barang);
 
         if ($request->hasFile('foto')) {
             if ($barang->foto) {
@@ -113,15 +109,16 @@ class BarangController extends Controller
     }
 
     // Menghapus barang
-    public function destroy($id_barang)
+    public function destroy($id_barang) 
     {
         $barang = Barang::findOrFail($id_barang);
         if ($barang->foto) {
-            Storage::delete('public/barang/' . $barang->foto);
+            Storage::delete('public/barang/'.$barang->foto);
         }
         $barang->delete();
 
-        return redirect()->route('barang.index')->with('success', 'Barang berhasil dihapus');
+        return redirect()->route('barang.index')
+                         ->with('success', 'Barang berhasil dihapus.');
     }
     // API untuk mobile: daftar barang
     public function apiList()

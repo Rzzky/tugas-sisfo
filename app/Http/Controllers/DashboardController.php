@@ -78,7 +78,7 @@ class DashboardController extends Controller
 
         // Low stock items (less than 5 available)
         $lowStockItems = Barang::where('tersedia', '<', 5)
-            ->where('status', 'aktif')
+            ->where('status', 'tersedia')
             ->with('kategori')
             ->limit(5)
             ->get();
