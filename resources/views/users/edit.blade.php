@@ -11,11 +11,6 @@
         @method('PUT') {{-- Method spoofing untuk update --}}
         
         <div>
-            <label for="name" class="block text-sm font-medium text-slate-300">Nama Lengkap <span class="text-red-500">*</span></label>
-            <input type="text" name="name" id="name" class="mt-1 block w-full bg-slate-900 border-slate-600 rounded-md shadow-sm text-slate-200" value="{{ old('name', $user->name) }}" required>
-        </div>
-        
-        <div>
             <label for="username" class="block text-sm font-medium text-slate-300">Username <span class="text-red-500">*</span></label>
             <input type="text" name="username" id="username" class="mt-1 block w-full bg-slate-900 border-slate-600 rounded-md shadow-sm text-slate-200" value="{{ old('username', $user->username) }}" required>
         </div>

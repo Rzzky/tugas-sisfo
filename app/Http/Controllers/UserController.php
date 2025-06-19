@@ -32,7 +32,6 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
@@ -40,7 +39,6 @@ class UserController extends Controller
         ]);
 
         User::create([
-            'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -64,14 +62,12 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user)], // PENYEMPURNAAN
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user)], // PENYEMPURNAAN
             'role' => 'required|in:admin,user',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 
-        $user->name = $request->name;
         $user->username = $request->username;
         $user->email = $request->email;
         $user->role = $request->role;

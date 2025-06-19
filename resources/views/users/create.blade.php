@@ -6,10 +6,6 @@
     <h2 class="text-2xl font-semibold text-slate-200 mb-6">Formulir User Baru</h2>
     <form action="{{ route('users.store') }}" method="POST" class="space-y-6">
         @csrf
-        <div>
-            <label for="name" class="block text-sm font-medium text-slate-300">Nama Lengkap <span class="text-red-500">*</span></label>
-            <input type="text" name="name" id="name" class="mt-1 block w-full bg-slate-900 border-slate-600 rounded-md shadow-sm text-slate-200" value="{{ old('name') }}" required>
-        </div>
         
         <div>
             <label for="username" class="block text-sm font-medium text-slate-300">Username <span class="text-red-500">*</span></label>

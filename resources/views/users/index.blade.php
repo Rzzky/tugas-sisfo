@@ -35,7 +35,7 @@
             <tbody class="text-slate-400">
                 @forelse ($users as $user)
                     <tr class="border-b border-slate-700 hover:bg-slate-900/50">
-                        <td class="py-3 px-4">{{ $user->name }}</td>
+                        <td class="py-3 px-4">{{ $user->username }}</td>
                         <td class="py-3 px-4">{{ $user->email }}</td>
                         <td class="py-3 px-4 text-center">
                             @if ($user->role == 'admin')
